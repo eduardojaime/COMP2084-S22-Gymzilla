@@ -34,5 +34,10 @@ namespace Gymzilla.Controllers
             ViewData["brand"] = brand;
             return View();
         }
+
+        public IActionResult Create()
+        {
+            return View();
+        }
     }
 }
