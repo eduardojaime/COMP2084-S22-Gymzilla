@@ -13,6 +13,10 @@ namespace Gymzilla.Data
             : base(options)
         {
         }
-        public DbSet<Gymzilla.Models.Brand> Brand { get; set; }
+
+        // Global DbSet objects for each Model class that can perform CRUD operations
+        public DbSet<Brand> Brands { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<Product> Products { get; set; }
     }
 }
