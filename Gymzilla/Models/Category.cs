@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace Gymzilla.Models
 {
-    public class Brand
+    public class Category
     {
-        public int BrandId { get; set; }
+        public int CategoryId { get; set; }
 
         [Required]
         public string Name { get; set; }
 
-        // reference to child object: 1 Brand / Many Products
+        // reference to child object: 1 Category / Many Products
         public List<Product> Products { get; set; }
     }
 }
