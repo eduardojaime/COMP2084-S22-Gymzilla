@@ -1,26 +1,35 @@
 ﻿@model IEnumerable<Gymzilla.Models.Brand>
 
 @{
-    ViewData["Title"] = "Our Brands";
+    ViewData["Title"] = "Index";
 }
-<h1>Our Brands</h1>
-<ul>
-    @foreach (Brand b in Model)
-            {
-                <li>
-                    <a asp-controller="Brands" asp-action="ShopByBrand" asp-route-brand="@b.Name">
-                        @b.Name
-                    </a>                  
-                </li>
-            }
 
-    @*<li>
-            <a asp-controller="Brands" asp-action="ShopByBrand" asp-route-brand="Brand 1">Brand 1</a>
-        </li>
-        <li>
-            <a asp-controller="Brands" asp-action="ShopByBrand" asp-route-brand="Brand 2">Brand 2</a>
-        </li>
-        <li>
-            <a asp-controller="Brands" asp-action="ShopByBrand" asp-route-brand="Brand 3">Brand 3</a>
-        </li>*@
-</ul>
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.BrandId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.BrandId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.BrandId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
