@@ -53,5 +53,5 @@ jobs:
         with:
           app-name: 'gymzilla'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B87EFF7C319B4E85935CA33171562D7B }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_2E61A8B628CA4CF5B8ED36D0B5536264 }}
           package: .
