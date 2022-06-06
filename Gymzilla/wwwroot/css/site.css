@@ -24,10 +24,18 @@ a {
     color: #607D8B;
 }
 
+.navbar-dark {
+    background-color: #00796B;
+}
+
 .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
   color: #fff;
   background-color: #1b6ec2;
   border-color: #1861ac;
+}
+
+table.sortable th:hover {
+    cursor: pointer;
 }
 
 /* Sticky footer styles

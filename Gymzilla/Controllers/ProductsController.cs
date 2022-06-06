@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Gymzilla.Data;
 using Gymzilla.Models;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace Gymzilla.Controllers
 {
@@ -22,7 +24,7 @@ namespace Gymzilla.Controllers
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Products.Include(p => p.Brand).Include(p => p.Category);
+            var applicationDbContext = _context.Products.Include(p => p.Brand).Include(p => p.Category).OrderBy(p => p.Name);
             return View(await applicationDbContext.ToListAsync());
         }
 
@@ -95,7 +97,7 @@ namespace Gymzilla.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Name,Description,Price,Rating,Photo,CategoryId,BrandId")] Product product)
+        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Name,Description,Price,Rating,CategoryId,BrandId")] Product product, IFormFile Photo)
         {
             if (id != product.ProductId)
             {
@@ -106,6 +108,13 @@ namespace Gymzilla.Controllers
             {
                 try
                 {
+                    // upload Photo if there is one
+                    if (Photo != null)
+                    {
+                        var fileName = UploadPhoto(Photo);
+                        product.Photo = fileName;  // set unique file name on object before saving to db
+                    }
+
                     _context.Update(product);
                     await _context.SaveChangesAsync();
                 }
@@ -161,6 +170,26 @@ namespace Gymzilla.Controllers
         private bool ProductExists(int id)
         {
             return _context.Products.Any(e => e.ProductId == id);
+        }
+
+        private static string UploadPhoto(IFormFile Photo)
+        {
+            // get temp location of uploaded photo
+            var filePath = Path.GetTempFileName();
+
+            // use GUID class to ensure unique image name. e.g. logo.jpg => sd98f23723098-logo.jpg
+            var fileName = Guid.NewGuid().ToString() + "-" + Photo.FileName;
+
+            // set destination folder dynamically so it works both locally and on the live web server
+            var uploadPath = System.IO.Directory.GetCurrentDirectory() + "\\wwwroot\\img\\products\\" + fileName;
+
+            // copy the file now
+            using (var stream = new FileStream(uploadPath, FileMode.Create))
+            {
+                Photo.CopyTo(stream);
+            }
+
+            return fileName;
         }
     }
 }

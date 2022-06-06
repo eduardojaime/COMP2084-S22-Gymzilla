@@ -15,6 +15,8 @@ namespace Gymzilla.Models
         public string Name { get; set; }
 
         public string Description { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:c}")]  // MS Currency format
         public decimal Price { get; set; }
         public int Rating { get; set; }
         public string Photo { get; set; }
