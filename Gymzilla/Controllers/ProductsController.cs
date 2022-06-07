@@ -61,10 +61,17 @@ namespace Gymzilla.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,Name,Description,Price,Rating,Photo,CategoryId,BrandId")] Product product)
+        public async Task<IActionResult> Create([Bind("ProductId,Name,Description,Price,Rating,CategoryId,BrandId")] Product product, IFormFile Photo)
         {
             if (ModelState.IsValid)
             {
+                // upload Photo if there is one
+                if (Photo != null)
+                {
+                    var fileName = UploadPhoto(Photo);
+                    product.Photo = fileName;  // set unique file name on object before saving to db
+                }
+
                 _context.Add(product);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -97,7 +104,7 @@ namespace Gymzilla.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Name,Description,Price,Rating,CategoryId,BrandId")] Product product, IFormFile Photo)
+        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Name,Description,Price,Rating,CategoryId,BrandId")] Product product, IFormFile Photo, string CurrentPhoto)
         {
             if (id != product.ProductId)
             {
@@ -113,6 +120,11 @@ namespace Gymzilla.Controllers
                     {
                         var fileName = UploadPhoto(Photo);
                         product.Photo = fileName;  // set unique file name on object before saving to db
+                    }
+                    else
+                    {
+                        // keep current photo if there is one as no new one was uploaded
+                        product.Photo = CurrentPhoto;
                     }
 
                     _context.Update(product);

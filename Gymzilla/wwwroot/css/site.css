@@ -38,6 +38,10 @@ table.sortable th:hover {
     cursor: pointer;
 }
 
+.thumb { 
+    width: 100px;
+}
+
 /* Sticky footer styles
 -------------------------------------------------- */
 html {
