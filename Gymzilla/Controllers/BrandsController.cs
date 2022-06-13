@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Gymzilla.Data;
 using Gymzilla.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Gymzilla.Controllers
 {
+    [Authorize(Roles = "Administrator")]
     public class BrandsController : Controller
     {
         private readonly ApplicationDbContext _context;

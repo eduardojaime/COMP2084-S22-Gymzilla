@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Gymzilla.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrator")]
     public class ProductsController : Controller
     {
         private readonly ApplicationDbContext _context;
