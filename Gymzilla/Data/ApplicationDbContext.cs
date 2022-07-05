@@ -7,7 +7,7 @@ using Gymzilla.Models;
 
 namespace Gymzilla.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext //database
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -15,7 +15,7 @@ namespace Gymzilla.Data
         }
 
         // Global DbSet objects for each Model class that can perform CRUD operations
-        public DbSet<Brand> Brands { get; set; }
+        public DbSet<Brand> Brands { get; set; } // individual tables
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
     }

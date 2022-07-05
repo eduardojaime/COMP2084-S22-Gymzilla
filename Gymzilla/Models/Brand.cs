@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Gymzilla.Models
 {
+    // record in the table
     public class Brand
     {
         public int BrandId { get; set; }
