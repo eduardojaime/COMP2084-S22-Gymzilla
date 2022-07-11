@@ -18,5 +18,6 @@ namespace Gymzilla.Data
         public DbSet<Brand> Brands { get; set; } // individual tables
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<Cart> Carts { get; set; }
     }
 }

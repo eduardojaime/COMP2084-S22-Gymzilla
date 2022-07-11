@@ -1,4 +1,5 @@
 ﻿using Gymzilla.Data;
+using Gymzilla.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -45,5 +46,36 @@ namespace Gymzilla.Controllers
             // data as model
             return View(products);
         }
+
+        // GET handler for /Shop/AddToCart
+        // data will come from the form elements: two input fields
+        // model binder is a background process that links data sent from the request to parameters in my action method
+        public IActionResult AddToCart([FromForm]int ProductId, [FromForm]int Quantity)
+        {
+            // get or generate a customer id > who buys?
+            var customerId = GetCustomerId();
+            // query the db to get price > how much they pay?
+            var price = _context.Products.Find(ProductId).Price;
+            // create and save cart object
+            var cart = new Cart()
+            {
+                ProductId = ProductId,
+                Quantity = Quantity,
+                Price = price,
+                DateCreated = DateTime.UtcNow, // best practice, always store datetimes in UTC time
+                CustomerId = customerId
+            };
+            // save to changes database
+            _context.Carts.Add(cart);
+            _context.SaveChanges();
+            // redirect to cart view
+            return Redirect("Cart");
+        }
+
+
+        private string GetCustomerId() {
+            return "1"; //testing for now
+        }
+
     }
 }
