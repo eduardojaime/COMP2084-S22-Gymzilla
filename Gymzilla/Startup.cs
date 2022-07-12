@@ -42,6 +42,7 @@ namespace Gymzilla
                     options.ClientSecret = Configuration.GetSection("Authentication:Google")["ClientSecret"];
                 });
 
+            // needed in order to enable session state services
             services.AddSession();
 
             services.AddControllersWithViews();
@@ -68,6 +69,9 @@ namespace Gymzilla
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // adds session middleware registered above in services.AddSession() call
+            app.UseSession();
 
             app.UseEndpoints(endpoints =>
             {

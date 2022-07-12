@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq; // make sure you import LINQ library
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace Gymzilla.Controllers
 {
@@ -72,9 +73,46 @@ namespace Gymzilla.Controllers
             return Redirect("Cart");
         }
 
+        // GET handler for /Shop/Cart
+        public IActionResult Cart()
+        {
+            string customerId = GetCustomerId();
+            // return a list of elements in the carts table by customerId
+            var carts = _context.Carts
+                        .Where(c=> c.CustomerId == customerId)
+                        .OrderByDescending(c=>c.DateCreated)
+                        .ToList();
+            return View(carts);
+        }
 
+
+        /// <summary>
+        /// This method will use the session object to store a value to identify the user visiting the site
+        /// Users can be anonymous or authenticated
+        /// Anonymous users will be identified by a randomly generated GUID
+        /// Authenticated users will be identified by their email address
+        /// </summary>
+        /// <returns>A string value representing a user ID</returns>
         private string GetCustomerId() {
-            return "1"; //testing for now
+            // variable to store generated/retrieved ID value
+            string customerId = string.Empty;
+
+            // check the object for a customer id
+            // Microsoft.AspNetCore.Http to access GetString
+            if (String.IsNullOrEmpty(HttpContext.Session.GetString("CustomerId"))) {
+
+                if (User.Identity.IsAuthenticated)
+                {
+                    customerId = User.Identity.Name;
+                }
+                else { 
+                    customerId = Guid.NewGuid().ToString();
+                }
+
+                HttpContext.Session.SetString("CustomerId", customerId);
+            }
+
+            return HttpContext.Session.GetString("CustomerId");
         }
 
     }
