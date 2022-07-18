@@ -7,6 +7,8 @@ using System.Linq; // make sure you import LINQ library
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Gymzilla.Extensions;
 
 namespace Gymzilla.Controllers
 {
@@ -94,7 +96,8 @@ namespace Gymzilla.Controllers
         }
 
         // TODO: RemoveToCart
-        public IActionResult RemoveFromCart(int id) { 
+        public IActionResult RemoveFromCart(int id)
+        {
             // Remove with LINQ
             // Retrieve element that you want to delete
             var cartItem = _context.Carts.Find(id);
@@ -107,7 +110,42 @@ namespace Gymzilla.Controllers
         }
 
         // TODO: Checkout
+        [Authorize]
+        public IActionResult Checkout()
+        {
+            return View();
+        }
 
+        // Handle POST on Checkout page
+        // POST is triggered by button inside a form
+        [HttpPost]
+        [ValidateAntiForgeryToken] // for security
+        [Authorize]
+        public IActionResult Checkout([Bind("FirstName,LastName,Address,City,Province,PostalCode")] Order order)
+        {
+            // populate the 3 special order properties: Date, CustomerId, Total
+            order.OrderTime = DateTime.UtcNow;
+            order.CustomerId = GetCustomerId();
+            // calculate total
+            var carts = _context.Carts
+                        .Include(c => c.Product) // include every product connected to a cart, similar to JOIN in SQL
+                        .Where(c => c.CustomerId == GetCustomerId())
+                        .OrderByDescending(c => c.DateCreated)
+                        .ToList();
+            var total = carts.Sum(c => c.Price);
+            order.Total = total;
+
+            // store in session object to hold this order temporarily until payment is made
+            HttpContext.Session.SetObject("Order", order);
+
+            // redirect to Payment page
+            return RedirectToAction("Payment");
+        }
+
+        // TODO: Payment
+        public IActionResult Payment() { 
+            return View();
+        }
 
         /// <summary>
         /// This method will use the session object to store a value to identify the user visiting the site
