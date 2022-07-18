@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq; // make sure you import LINQ library
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace Gymzilla.Controllers
 {
@@ -51,7 +52,7 @@ namespace Gymzilla.Controllers
         // GET handler for /Shop/AddToCart
         // data will come from the form elements: two input fields
         // model binder is a background process that links data sent from the request to parameters in my action method
-        public IActionResult AddToCart([FromForm]int ProductId, [FromForm]int Quantity)
+        public IActionResult AddToCart([FromForm] int ProductId, [FromForm] int Quantity)
         {
             // get or generate a customer id > who buys?
             var customerId = GetCustomerId();
@@ -79,11 +80,33 @@ namespace Gymzilla.Controllers
             string customerId = GetCustomerId();
             // return a list of elements in the carts table by customerId
             var carts = _context.Carts
-                        .Where(c=> c.CustomerId == customerId)
-                        .OrderByDescending(c=>c.DateCreated)
+                        .Include(c => c.Product) // include every product connected to a cart, similar to JOIN in SQL
+                        .Where(c => c.CustomerId == customerId)
+                        .OrderByDescending(c => c.DateCreated)
                         .ToList();
+
+            // pass single value to view with the viewbag object
+            // use LINQ methods to calculate sums and averages and other operations easily
+            var total = carts.Sum(c => c.Price).ToString("C");
+            ViewBag.TotalAmount = total; // Viewbag object is dynamic, after this line of code "TotalAmount" will be available to the app
+
             return View(carts);
         }
+
+        // TODO: RemoveToCart
+        public IActionResult RemoveFromCart(int id) { 
+            // Remove with LINQ
+            // Retrieve element that you want to delete
+            var cartItem = _context.Carts.Find(id);
+            // Call .remove() from the dbset
+            _context.Carts.Remove(cartItem);
+            // save changes
+            _context.SaveChanges();
+            // redirect somewhere
+            return RedirectToAction("Cart");
+        }
+
+        // TODO: Checkout
 
 
         /// <summary>
@@ -93,19 +116,22 @@ namespace Gymzilla.Controllers
         /// Authenticated users will be identified by their email address
         /// </summary>
         /// <returns>A string value representing a user ID</returns>
-        private string GetCustomerId() {
+        private string GetCustomerId()
+        {
             // variable to store generated/retrieved ID value
             string customerId = string.Empty;
 
             // check the object for a customer id
             // Microsoft.AspNetCore.Http to access GetString
-            if (String.IsNullOrEmpty(HttpContext.Session.GetString("CustomerId"))) {
+            if (String.IsNullOrEmpty(HttpContext.Session.GetString("CustomerId")))
+            {
 
                 if (User.Identity.IsAuthenticated)
                 {
                     customerId = User.Identity.Name;
                 }
-                else { 
+                else
+                {
                     customerId = Guid.NewGuid().ToString();
                 }
 
