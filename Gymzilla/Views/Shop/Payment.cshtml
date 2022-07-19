@@ -1,0 +1,11 @@
+﻿<h1>Confirm Payment Amount</h1>
+<h4>Order Total: @((ViewBag.Total/100).ToString("C"))</h4>
+
+<script src="https://checkout.stripe.com/checkout.js"
+        class="stripe-button"
+        data-key="@ViewBag.PublishableKey"
+        data-amount="@ViewBag.Total"
+        data-name="Gymzilla Store"
+        data-image="https://stripe.com/img/documentation/checkout/marketplace.png"
+        data-locale="auto"
+        data-currency="cad"></script>

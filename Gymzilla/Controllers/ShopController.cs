@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Gymzilla.Extensions;
+using Microsoft.Extensions.Configuration;
 
 namespace Gymzilla.Controllers
 {
@@ -16,11 +17,13 @@ namespace Gymzilla.Controllers
     {
         // db connection
         private readonly ApplicationDbContext _context;
+        private readonly IConfiguration _configuration;
 
         // constructor
-        public ShopController(ApplicationDbContext context)
+        public ShopController(ApplicationDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         public IActionResult Index()
@@ -143,7 +146,15 @@ namespace Gymzilla.Controllers
         }
 
         // TODO: Payment
-        public IActionResult Payment() { 
+        public IActionResult Payment() {
+            var order = HttpContext.Session.GetObject<Order>("Order");
+
+            // Pass total in cents
+            ViewBag.Total = order.Total * 100;
+
+            // pass publishable key to view to use in javascript code
+            ViewBag.PublishableKey = _configuration["Payments:Stripe:PublishableKey"];
+
             return View();
         }
 
