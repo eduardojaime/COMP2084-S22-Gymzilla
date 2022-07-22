@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Gymzilla.Extensions;
 using Microsoft.Extensions.Configuration;
+using Stripe;
+using Stripe.Checkout;
 
 namespace Gymzilla.Controllers
 {
@@ -124,7 +126,7 @@ namespace Gymzilla.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken] // for security
         [Authorize]
-        public IActionResult Checkout([Bind("FirstName,LastName,Address,City,Province,PostalCode")] Order order)
+        public IActionResult Checkout([Bind("FirstName,LastName,Address,City,Province,PostalCode")] Gymzilla.Models.Order order)
         {
             // populate the 3 special order properties: Date, CustomerId, Total
             order.OrderTime = DateTime.UtcNow;
@@ -145,9 +147,9 @@ namespace Gymzilla.Controllers
             return RedirectToAction("Payment");
         }
 
-        // TODO: Payment
-        public IActionResult Payment() {
-            var order = HttpContext.Session.GetObject<Order>("Order");
+        public IActionResult Payment()
+        {
+            var order = HttpContext.Session.GetObject<Gymzilla.Models.Order>("Order");
 
             // Pass total in cents
             ViewBag.Total = order.Total * 100;
@@ -156,6 +158,84 @@ namespace Gymzilla.Controllers
             ViewBag.PublishableKey = _configuration["Payments:Stripe:PublishableKey"];
 
             return View();
+        }
+
+        [HttpPost]
+        public IActionResult Payment(string stripeToken)
+        {
+            // get order from session variable
+            var order = HttpContext.Session.GetObject<Gymzilla.Models.Order>("Order");
+            // Install and import Stripe and Stripe.Checkout
+            // retrieve stripe config key > client Secret
+            StripeConfiguration.ApiKey = _configuration["Payments:Stripe:ClientSecret"];
+            // create a stripe session object options
+            var options = new SessionCreateOptions
+            {
+                LineItems = new List<SessionLineItemOptions>
+                {
+                  new SessionLineItemOptions
+                  {
+                    PriceData = new SessionLineItemPriceDataOptions
+                    {
+                        UnitAmount = ((long?)(order.Total * 100)),
+                        Currency = "cad",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions
+                        {
+                            Name = "Gymzilla Purchase"
+                        },
+                    },
+                    Quantity = 1
+                  },
+                },
+                PaymentMethodTypes = new List<string>
+                {
+                  "card"
+                },
+                Mode = "payment",
+                SuccessUrl = "https://" + Request.Host + "/Shop/SaveOrder",
+                CancelUrl = "https://" + Request.Host + "/Shop/Cart",
+            };
+
+            // create a stripe service object which will help us initialize the session
+            var service = new SessionService();
+            // initialize the session object
+            Session session = service.Create(options);
+
+            // pass and id back to the view (handle by javascript)
+            return Json(new { id = session.Id });
+        }
+
+        // TODO: SaveOrder
+        public IActionResult SaveOrder()
+        {
+            // get order from session
+            var order = HttpContext.Session.GetObject<Models.Order>("Order");
+            // save it in the db
+            _context.Orders.Add(order);
+            _context.SaveChanges();
+            // get customer id
+            var customerId = GetCustomerId();
+            // get all cart items
+            var cartItems = _context.Carts.Where(i => i.CustomerId == customerId);
+            // save them in order details
+            foreach (var item in cartItems) {
+                var orderDetail = new Models.OrderItem
+                {
+                    OrderId = order.Id,
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Price = item.Price
+                };
+                _context.OrderItems.Add(orderDetail);            
+            }
+            _context.SaveChanges();
+            // clear the cart
+            foreach (var item in cartItems) { 
+                _context.Carts.Remove(item);
+            }
+            _context.SaveChanges();
+            // redirect to /Orders/Details
+            return RedirectToAction("Details", "Orders", new { @id = order.Id });
         }
 
         /// <summary>
