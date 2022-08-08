@@ -8,6 +8,7 @@ using Gymzilla.Controllers;
 using Gymzilla.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.EntityFrameworkCore; // for the in memory db
+using Microsoft.AspNetCore.Mvc; // to extract the view result
 
 namespace GymzillaTests
 {
@@ -22,6 +23,7 @@ namespace GymzillaTests
         private List<Product> _products = new List<Product>();
 
 
+        // Arrange step
         [TestInitialize]
         public void TestInitialize()
         {
@@ -60,6 +62,62 @@ namespace GymzillaTests
 
             // instantiate the controller object with mock db context
             _controller = new ProductsController(_context);
+        }
+
+        // Test 1 > making sure index loads
+        [TestMethod]
+        public void IndexReturnsView() {
+            // skip arrange, TestInitialize is called everytime the test runs
+            // Act
+            var result = _controller.Index();
+            // Assert
+            Assert.IsNotNull(result);
+        }
+
+        // Test 2 > making sure index loads some data
+        [TestMethod]
+        public void IndexReturnsProductData() {
+            // Act > call index and retrieve data from view
+            var result = _controller.Index();
+            // extract view
+            var viewResult = (ViewResult)result.Result;
+            // extract the model
+            var model = (List<Product>)viewResult.Model;
+            // order data
+            var orderedProducts = _products.OrderBy(p => p.Name).ToList();
+            // Assert
+            CollectionAssert.AreEqual(orderedProducts, model);
+        }
+
+        // Test 3 > making sure I get a NotFound result if I try to get details from a non-existant ID
+        [TestMethod]
+        public void DetailsReturnsNotFoundIfIdIsNotValid() {
+            var testId = 100;
+            var actionResult = _controller.Details(testId);
+            var notFoundResult = (NotFoundResult)actionResult.Result; // convert generic ActionResult object to the expected result
+            // make sure app returns 404 when searching for an invalid id
+            Assert.AreEqual(404, notFoundResult.StatusCode);
+        }
+
+        // Test 4 > making sure I can add a new product
+        [TestMethod]
+        public void PostCreateProduct() {
+            // create a new product
+            var newProduct = new Product
+            {
+                ProductId = 4,
+                Name = "Jumping Rope",
+                Category = new Category() { CategoryId = 2, Name = "Jumping Gear" },
+                Brand = new Brand() { BrandId = 2, Name = "PC Gym" }
+            };
+
+            // call create method and pass new product, this will add it to the database from the controller
+            var result = _controller.Create(newProduct, null);
+
+            // test the context to check whether I can find a product with ID 4
+            var prod = _context.Products.Find(4);
+            // check whether prod is null (not found)
+            Assert.IsNotNull(prod);
         }
 
     }
