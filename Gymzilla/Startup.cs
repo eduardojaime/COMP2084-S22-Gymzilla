@@ -46,6 +46,8 @@ namespace Gymzilla
             services.AddSession();
 
             services.AddControllersWithViews();
+
+            services.AddSwaggerGen();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -72,6 +74,9 @@ namespace Gymzilla
 
             // adds session middleware registered above in services.AddSession() call
             app.UseSession();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Gymzilla v1"));
 
             app.UseEndpoints(endpoints =>
             {
